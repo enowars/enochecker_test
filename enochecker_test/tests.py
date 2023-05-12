@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import json
 import secrets
 from typing import Optional
 
@@ -7,6 +8,7 @@ import jsons
 import pytest
 import requests
 from enochecker_core import (
+    CheckerInfoMessage,
     CheckerMethod,
     CheckerResultMessage,
     CheckerTaskMessage,
@@ -625,4 +627,20 @@ def test_exploit_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+    )
+
+
+def test_checker_info_message_case(
+    checker_url,
+):
+    r = requests.get(
+        f"{checker_url}/service",
+        timeout=REQUEST_TIMEOUT,
+    )
+    assert r.status_code == 200
+    result_message: CheckerInfoMessage = jsons.loads(
+        r.content, CheckerInfoMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE
+    )
+    assert r.json() == json.loads(
+        jsons.dumps(result_message, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE)
     )
