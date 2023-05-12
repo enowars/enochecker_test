@@ -392,6 +392,22 @@ def test_getflag(round_id, flag_id, service_address, checker_url):
     _test_getflag(flag, round_id, flag_id, service_address, checker_url)
 
 
+def test_getflag_after_second_putflag_with_same_variant_id(
+    round_id, flag_id, flag_variants, service_address, checker_url
+):
+    flag = generate_dummyflag()
+    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        generate_dummyflag(),
+        round_id,
+        flag_id,
+        service_address,
+        checker_url,
+        unique_variant_index=flag_id + flag_variants,
+    )
+    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+
+
 def test_getflag_twice(round_id, flag_id, service_address, checker_url):
     flag = generate_dummyflag()
     _test_putflag(flag, round_id, flag_id, service_address, checker_url)
@@ -489,6 +505,20 @@ def test_putnoise_invalid_variant(
 
 def test_getnoise(round_id, noise_id, service_address, checker_url):
     _test_putnoise(round_id, noise_id, service_address, checker_url)
+    _test_getnoise(round_id, noise_id, service_address, checker_url)
+
+
+def test_getnoise_after_second_putnoise_with_same_variant_id(
+    round_id, noise_id, noise_variants, service_address, checker_url
+):
+    _test_putnoise(round_id, noise_id, service_address, checker_url)
+    _test_putnoise(
+        round_id,
+        noise_id,
+        service_address,
+        checker_url,
+        unique_variant_index=noise_id + noise_variants,
+    )
     _test_getnoise(round_id, noise_id, service_address, checker_url)
 
 
