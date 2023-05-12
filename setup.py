@@ -9,7 +9,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="enochecker_test",
-    version="0.7.1",
+    version="0.8.0",
     author="ldruschk",
     author_email="ldruschk@posteo.de",
     description="Library to help testing checker scripts based on enochecker",
@@ -38,5 +38,5 @@ setuptools.setup(
         "Programming Language :: Python :: 3.11",
     ],
     zip_safe=False,  # This might be needed for reqirements.txt
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
