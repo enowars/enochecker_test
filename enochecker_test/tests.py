@@ -390,6 +390,13 @@ def test_getflag(round_id, flag_id, service_address, checker_url):
     _test_getflag(flag, round_id, flag_id, service_address, checker_url)
 
 
+def test_getflag_twice(round_id, flag_id, service_address, checker_url):
+    flag = generate_dummyflag()
+    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+
+
 def test_getflag_wrong_flag(round_id, flag_id, service_address, checker_url):
     flag = generate_dummyflag()
     _test_putflag(flag, round_id, flag_id, service_address, checker_url)
@@ -480,6 +487,12 @@ def test_putnoise_invalid_variant(
 
 def test_getnoise(round_id, noise_id, service_address, checker_url):
     _test_putnoise(round_id, noise_id, service_address, checker_url)
+    _test_getnoise(round_id, noise_id, service_address, checker_url)
+
+
+def test_getnoise_twice(round_id, noise_id, service_address, checker_url):
+    _test_putnoise(round_id, noise_id, service_address, checker_url)
+    _test_getnoise(round_id, noise_id, service_address, checker_url)
     _test_getnoise(round_id, noise_id, service_address, checker_url)
 
 
