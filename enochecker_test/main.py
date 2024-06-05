@@ -11,7 +11,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-def run_tests(host, port, service_address, test_methods):
+def run_tests(host, port, service_address, test_expr):
     s = requests.Session()
     retry_strategy = Retry(
         total=5,
@@ -46,13 +46,10 @@ def run_tests(host, port, service_address, test_methods):
         "-v",
     ]
 
-    if test_methods is None or len(test_methods) == 0:
-        test_args.append(os.path.join(os.path.dirname(__file__), "tests.py"))
-    else:
-        for method in test_methods:
-            test_args.append(
-                os.path.join(os.path.dirname(__file__), "tests.py") + "::" + method
-            )
+    if test_expr:
+        test_args.append("-k")
+        test_args.append(test_expr)
+    test_args.append(os.path.join(os.path.dirname(__file__), "tests.py"))
 
     sys.exit(pytest.main(test_args))
 
@@ -60,7 +57,18 @@ def run_tests(host, port, service_address, test_methods):
 def main():
     parser = argparse.ArgumentParser(
         prog="enochecker_test",
+        # don't reformat but use description and epilog verbatim
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Utility for testing checkers that implement the enochecker API",
+        epilog="""Example Usage:
+
+    $ enochecker_test -a localhost -p 5008 -A 172.20.0.1 test_putflag
+
+Assuming that 172.20.0.1 is the ip address of the gateway of the network of the
+service's docker container as obtained by e.g:
+
+    $ docker network inspect service_default | jq ".[].IPAM.Config[].Gateway"
+""",
     )
     parser.add_argument(
         "-a",
@@ -80,13 +88,13 @@ def main():
     parser.add_argument(
         "-A",
         "--service-address",
-        help="The address on which the service is listening (defaults to ENOCHECKER_TEST_SERVICE_ADDRESS environment variable)",
+        help="The address on which the checker can reach the service (defaults to ENOCHECKER_TEST_SERVICE_ADDRESS environment variable)",
         default=os.environ.get("ENOCHECKER_TEST_SERVICE_ADDRESS"),
     )
     parser.add_argument(
-        "testcase",
-        help="Specify the tests that should be run in the syntax expected by pytest, e.g. test_getflag. If no test is specified, all tests will be run.",
-        nargs="*",
+        "testexpr",
+        help="Specify the tests that should be run in the syntax expected by pytests -k flag, e.g. 'test_getflag' or 'not exploit'. If no expr is specified, all tests will be run.",
+        nargs="?",
     )
 
     args = parser.parse_args()
@@ -109,5 +117,5 @@ def main():
 
     logging.basicConfig(level=logging.INFO)
     run_tests(
-        args.checker_address, args.checker_port, args.service_address, args.testcase
+        args.checker_address, args.checker_port, args.service_address, args.testexpr
     )
