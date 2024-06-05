@@ -54,4 +54,7 @@ jobs:
 
     - name: test sdist
       run: |
-        python -m poetry build
+        mkdir /tmp/test_sdist
+        python -m poetry build -f sdist -o /tmp/test_sdist
+        cd /tmp/test_sdist
+        pip install enochecker_test-*.tar.gz
