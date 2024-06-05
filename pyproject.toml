@@ -38,15 +38,7 @@ flake8 = "^7.0.0"
 isort = "^5.13.2"
 mypy = "^1.10.0"
 
-typed-ast = "^1.5.4"
-types-colorama = "^0.4.15.11"
-types-docutils = "^0.20.0.1"
-types-Pygments = "^2.15.0.1"
-types-requests = "^2.30.0.0"
-types-setuptools = "^67.7.0.2"
-types-toml = "^0.10.8.6"
-types-urllib3 = "^1.26.25.13"
-typing_extensions = "^4.0.0"
+types-requests = "^2.30"
 
 [tool.poetry.scripts]
 enochecker_cli = "enochecker_cli.main:main"
