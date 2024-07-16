@@ -11,7 +11,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-def run_tests(host, port, service_address, test_expr):
+def run_tests(host, port, service_address, test_expr, skip_non_eno_flags: bool):
     s = requests.Session()
     retry_strategy = Retry(
         total=5,
@@ -44,7 +44,7 @@ def run_tests(host, port, service_address, test_expr):
         f"--exploit-variants={info.exploit_variants}",
         "--durations=0",
         "-v",
-    ]
+    ] + (["--skip-non-eno-flags"] if skip_non_eno_flags else [])
 
     if test_expr:
         test_args.append("-k")
@@ -92,6 +92,11 @@ service's docker container as obtained by e.g:
         default=os.environ.get("ENOCHECKER_TEST_SERVICE_ADDRESS"),
     )
     parser.add_argument(
+        "--skip-non-eno-flags",
+        action="store_true",
+        help="Skips all test that do not use a ENO[A-Za-z0-9+/=]{48} flag. SHOULD ONLY BE USED AS AN EXCEPTION!!",
+    )
+    parser.add_argument(
         "testexpr",
         help="Specify the tests that should be run in the syntax expected by pytests -k flag, e.g. 'test_getflag' or 'not exploit'. If no expr is specified, all tests will be run.",
         nargs="?",
@@ -117,5 +122,9 @@ service's docker container as obtained by e.g:
 
     logging.basicConfig(level=logging.INFO)
     run_tests(
-        args.checker_address, args.checker_port, args.service_address, args.testexpr
+        args.checker_address,
+        args.checker_port,
+        args.service_address,
+        args.testexpr,
+        args.skip_non_eno_flags,
     )
