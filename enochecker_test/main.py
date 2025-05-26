@@ -11,7 +11,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-def run_tests(host, port, service_address, test_expr):
+def run_tests(host, port, service_address, timeout, test_expr):
     s = requests.Session()
     retry_strategy = Retry(
         total=5,
@@ -26,12 +26,13 @@ def run_tests(host, port, service_address, test_expr):
         r.content, CheckerInfoMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE
     )
     logging.info(
-        "Testing service %s, flagVariants: %d, noiseVariants: %d, havocVariants: %d, exploitVariants: %d",
+        "Testing service %s, flagVariants: %d, noiseVariants: %d, havocVariants: %d, exploitVariants: %d, timeout: %d",
         info.service_name,
         info.flag_variants,
         info.noise_variants,
         info.havoc_variants,
         info.exploit_variants,
+        timeout,
     )
 
     test_args = [
@@ -42,6 +43,7 @@ def run_tests(host, port, service_address, test_expr):
         f"--noise-variants={info.noise_variants}",
         f"--havoc-variants={info.havoc_variants}",
         f"--exploit-variants={info.exploit_variants}",
+        f"--timeout={timeout}",
         "--durations=0",
         "-v",
     ]
@@ -62,7 +64,7 @@ def main():
         description="Utility for testing checkers that implement the enochecker API",
         epilog="""Example Usage:
 
-    $ enochecker_test -a localhost -p 5008 -A 172.20.0.1 test_putflag
+    $ enochecker_test -a localhost -p 5008 -A 172.20.0.1 -t 10 test_putflag
 
 Assuming that 172.20.0.1 is the ip address of the gateway of the network of the
 service's docker container as obtained by e.g:
@@ -92,6 +94,12 @@ service's docker container as obtained by e.g:
         default=os.environ.get("ENOCHECKER_TEST_SERVICE_ADDRESS"),
     )
     parser.add_argument(
+        "-t",
+        "--timeout",
+        help="The timeout in seconds which the checker has to process the request (defaults to ENOCHECKER_TEST_TIMEOUT or 10s environment variable)",
+        default=os.environ.get("ENOCHECKER_TEST_TIMEOUT", default=10),
+    )
+    parser.add_argument(
         "testexpr",
         help="Specify the tests that should be run in the syntax expected by pytests -k flag, e.g. 'test_getflag' or 'not exploit'. If no expr is specified, all tests will be run.",
         nargs="?",
@@ -117,5 +125,9 @@ service's docker container as obtained by e.g:
 
     logging.basicConfig(level=logging.INFO)
     run_tests(
-        args.checker_address, args.checker_port, args.service_address, args.testexpr
+        args.checker_address,
+        args.checker_port,
+        args.service_address,
+        args.timeout,
+        args.testexpr,
     )

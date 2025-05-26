@@ -18,7 +18,6 @@ from enochecker_core import (
 global_round_id = 0
 FLAG_REGEX_ASCII = r"ENO[A-Za-z0-9+\/=]{48}"
 FLAG_REGEX_UTF8 = r"🥺[A-Za-z0-9+\/=]{48}🥺🥺"
-REQUEST_TIMEOUT = 10
 CHAIN_ID_PREFIX = secrets.token_hex(20)
 
 
@@ -47,6 +46,7 @@ def pytest_generate_tests(metafunc):
     noise_variants: int = metafunc.config.getoption("--noise-variants")
     havoc_variants: int = metafunc.config.getoption("--havoc-variants")
     exploit_variants: int = metafunc.config.getoption("--exploit-variants")
+    timeout: int = metafunc.config.getoption("--timeout")
 
     if "flag_id" in metafunc.fixturenames:
         metafunc.parametrize("flag_id", range(flag_variants))
@@ -83,6 +83,9 @@ def pytest_generate_tests(metafunc):
     if "encoding" in metafunc.fixturenames:
         metafunc.parametrize("encoding", ["ascii", "utf8"])
 
+    if "timeout" in metafunc.fixturenames:
+        metafunc.parametrize("timeout", [timeout])
+
 
 def generate_dummyflag(encoding: str) -> str:
     if encoding == "utf8":
@@ -116,6 +119,7 @@ def _create_request_message(
     flag_regex: Optional[str] = None,
     flag_hash: Optional[str] = None,
     attack_info: Optional[str] = None,
+    timeout: Optional[int] = 10,
 ) -> CheckerTaskMessage:
     if unique_variant_index is None:
         unique_variant_index = variant_id
@@ -141,7 +145,7 @@ def _create_request_message(
         related_round_id=round_id,
         flag=flag,
         variant_id=variant_id,
-        timeout=REQUEST_TIMEOUT * 1000,
+        timeout=timeout * 1000 if timeout is not None else 10 * 1000,
         round_length=60000,
         task_chain_id=task_chain_id,
         flag_regex=flag_regex,
@@ -165,6 +169,7 @@ def _test_putflag(
     flag_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ) -> Optional[str]:
@@ -176,6 +181,7 @@ def _test_putflag(
         flag_id,
         service_address,
         flag,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
     )
     msg = _jsonify_request_message(request_message)
@@ -183,7 +189,7 @@ def _test_putflag(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     result_message: CheckerResultMessage = jsons.loads(
         r.content, CheckerResultMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE
@@ -200,6 +206,7 @@ def _test_getflag(
     flag_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ):
@@ -211,6 +218,7 @@ def _test_getflag(
         flag_id,
         service_address,
         flag,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
     )
     msg = _jsonify_request_message(request_message)
@@ -218,7 +226,7 @@ def _test_getflag(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerResultMessage = jsons.loads(
@@ -234,6 +242,7 @@ def _test_putnoise(
     noise_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ):
@@ -244,6 +253,7 @@ def _test_putnoise(
         round_id,
         noise_id,
         service_address,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
     )
     msg = _jsonify_request_message(request_message)
@@ -251,7 +261,7 @@ def _test_putnoise(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerResultMessage = jsons.loads(
@@ -267,6 +277,7 @@ def _test_getnoise(
     noise_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ):
@@ -277,6 +288,7 @@ def _test_getnoise(
         round_id,
         noise_id,
         service_address,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
     )
     msg = _jsonify_request_message(request_message)
@@ -284,7 +296,7 @@ def _test_getnoise(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerResultMessage = jsons.loads(
@@ -300,6 +312,7 @@ def _test_havoc(
     havoc_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ):
@@ -310,6 +323,7 @@ def _test_havoc(
         round_id,
         havoc_id,
         service_address,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
     )
     msg = _jsonify_request_message(request_message)
@@ -317,7 +331,7 @@ def _test_havoc(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerResultMessage = jsons.loads(
@@ -336,6 +350,7 @@ def _test_exploit(
     exploit_id,
     service_address,
     checker_url,
+    timeout,
     unique_variant_index=None,
     expected_result=CheckerTaskResult.OK,
 ) -> Optional[str]:
@@ -346,6 +361,7 @@ def _test_exploit(
         round_id,
         exploit_id,
         service_address,
+        timeout=timeout,
         unique_variant_index=unique_variant_index,
         flag_regex=flag_regex,
         flag_hash=flag_hash,
@@ -356,7 +372,7 @@ def _test_exploit(
         f"{checker_url}",
         data=msg,
         headers={"content-type": "application/json"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerResultMessage = jsons.loads(
@@ -368,13 +384,21 @@ def _test_exploit(
     return result_message.flag
 
 
-def test_putflag(encoding, round_id, flag_id, service_address, checker_url):
+def test_putflag(encoding, round_id, flag_id, service_address, checker_url, timeout):
     flag = generate_dummyflag(encoding)
-    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
 
 
 def test_putflag_multiplied(
-    encoding, round_id, flag_id_multiplied, flag_variants, service_address, checker_url
+    encoding,
+    round_id,
+    flag_id_multiplied,
+    flag_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     flag = generate_dummyflag(encoding)
     _test_putflag(
@@ -384,11 +408,12 @@ def test_putflag_multiplied(
         service_address,
         checker_url,
         unique_variant_index=flag_id_multiplied,
+        timeout=timeout,
     )
 
 
 def test_putflag_invalid_variant(
-    encoding, round_id, flag_variants, service_address, checker_url
+    encoding, round_id, flag_variants, service_address, checker_url, timeout
 ):
     flag = generate_dummyflag(encoding)
     _test_putflag(
@@ -398,20 +423,33 @@ def test_putflag_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
-def test_getflag(encoding, round_id, flag_id, service_address, checker_url):
+def test_getflag(encoding, round_id, flag_id, service_address, checker_url, timeout):
     flag = generate_dummyflag(encoding)
-    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
-    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
+    _test_getflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
 
 
 def test_getflag_after_second_putflag_with_same_variant_id(
-    encoding, round_id, flag_id, flag_variants, service_address, checker_url
+    encoding,
+    round_id,
+    flag_id,
+    flag_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     flag = generate_dummyflag(encoding)
-    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
     _test_putflag(
         generate_dummyflag(encoding),
         round_id,
@@ -419,20 +457,35 @@ def test_getflag_after_second_putflag_with_same_variant_id(
         service_address,
         checker_url,
         unique_variant_index=flag_id + flag_variants,
+        timeout=timeout,
     )
-    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_getflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
 
 
-def test_getflag_twice(encoding, round_id, flag_id, service_address, checker_url):
+def test_getflag_twice(
+    encoding, round_id, flag_id, service_address, checker_url, timeout
+):
     flag = generate_dummyflag(encoding)
-    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
-    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
-    _test_getflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
+    _test_getflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
+    _test_getflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
 
 
-def test_getflag_wrong_flag(encoding, round_id, flag_id, service_address, checker_url):
+def test_getflag_wrong_flag(
+    encoding, round_id, flag_id, service_address, checker_url, timeout
+):
     flag = generate_dummyflag(encoding)
-    _test_putflag(flag, round_id, flag_id, service_address, checker_url)
+    _test_putflag(
+        flag, round_id, flag_id, service_address, checker_url, timeout=timeout
+    )
     wrong_flag = generate_dummyflag(encoding)
     _test_getflag(
         wrong_flag,
@@ -441,11 +494,12 @@ def test_getflag_wrong_flag(encoding, round_id, flag_id, service_address, checke
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.MUMBLE,
+        timeout=timeout,
     )
 
 
 def test_getflag_without_putflag(
-    encoding, round_id, flag_id, service_address, checker_url
+    encoding, round_id, flag_id, service_address, checker_url, timeout
 ):
     flag = generate_dummyflag(encoding)
     _test_getflag(
@@ -455,11 +509,18 @@ def test_getflag_without_putflag(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.MUMBLE,
+        timeout=timeout,
     )
 
 
 def test_getflag_multiplied(
-    encoding, round_id, flag_id_multiplied, flag_variants, service_address, checker_url
+    encoding,
+    round_id,
+    flag_id_multiplied,
+    flag_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     flag = generate_dummyflag(encoding)
     _test_putflag(
@@ -469,6 +530,7 @@ def test_getflag_multiplied(
         service_address,
         checker_url,
         unique_variant_index=flag_id_multiplied,
+        timeout=timeout,
     )
     _test_getflag(
         flag,
@@ -477,11 +539,12 @@ def test_getflag_multiplied(
         service_address,
         checker_url,
         unique_variant_index=flag_id_multiplied,
+        timeout=timeout,
     )
 
 
 def test_getflag_invalid_variant(
-    encoding, round_id, flag_variants, service_address, checker_url
+    encoding, round_id, flag_variants, service_address, checker_url, timeout
 ):
     flag = generate_dummyflag(encoding)
     _test_getflag(
@@ -491,15 +554,21 @@ def test_getflag_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
-def test_putnoise(round_id, noise_id, service_address, checker_url):
-    _test_putnoise(round_id, noise_id, service_address, checker_url)
+def test_putnoise(round_id, noise_id, service_address, checker_url, timeout):
+    _test_putnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
 
 
 def test_putnoise_multiplied(
-    round_id, noise_id_multiplied, noise_variants, service_address, checker_url
+    round_id,
+    noise_id_multiplied,
+    noise_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     _test_putnoise(
         round_id,
@@ -507,11 +576,12 @@ def test_putnoise_multiplied(
         service_address,
         checker_url,
         unique_variant_index=noise_id_multiplied,
+        timeout=timeout,
     )
 
 
 def test_putnoise_invalid_variant(
-    round_id, noise_variants, service_address, checker_url
+    round_id, noise_variants, service_address, checker_url, timeout
 ):
     _test_putnoise(
         round_id,
@@ -519,46 +589,56 @@ def test_putnoise_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
-def test_getnoise(round_id, noise_id, service_address, checker_url):
-    _test_putnoise(round_id, noise_id, service_address, checker_url)
-    _test_getnoise(round_id, noise_id, service_address, checker_url)
+def test_getnoise(round_id, noise_id, service_address, checker_url, timeout):
+    _test_putnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
+    _test_getnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
 
 
 def test_getnoise_after_second_putnoise_with_same_variant_id(
-    round_id, noise_id, noise_variants, service_address, checker_url
+    round_id, noise_id, noise_variants, service_address, checker_url, timeout
 ):
-    _test_putnoise(round_id, noise_id, service_address, checker_url)
+    _test_putnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
     _test_putnoise(
         round_id,
         noise_id,
         service_address,
         checker_url,
         unique_variant_index=noise_id + noise_variants,
+        timeout=timeout,
     )
-    _test_getnoise(round_id, noise_id, service_address, checker_url)
+    _test_getnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
 
 
-def test_getnoise_twice(round_id, noise_id, service_address, checker_url):
-    _test_putnoise(round_id, noise_id, service_address, checker_url)
-    _test_getnoise(round_id, noise_id, service_address, checker_url)
-    _test_getnoise(round_id, noise_id, service_address, checker_url)
+def test_getnoise_twice(round_id, noise_id, service_address, checker_url, timeout):
+    _test_putnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
+    _test_getnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
+    _test_getnoise(round_id, noise_id, service_address, checker_url, timeout=timeout)
 
 
-def test_getnoise_without_putnoise(round_id, noise_id, service_address, checker_url):
+def test_getnoise_without_putnoise(
+    round_id, noise_id, service_address, checker_url, timeout
+):
     _test_getnoise(
         round_id,
         noise_id,
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.MUMBLE,
+        timeout=timeout,
     )
 
 
 def test_getnoise_multiplied(
-    round_id, noise_id_multiplied, noise_variants, service_address, checker_url
+    round_id,
+    noise_id_multiplied,
+    noise_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     _test_putnoise(
         round_id,
@@ -566,6 +646,7 @@ def test_getnoise_multiplied(
         service_address,
         checker_url,
         unique_variant_index=noise_id_multiplied,
+        timeout=timeout,
     )
     _test_getnoise(
         round_id,
@@ -573,11 +654,12 @@ def test_getnoise_multiplied(
         service_address,
         checker_url,
         unique_variant_index=noise_id_multiplied,
+        timeout=timeout,
     )
 
 
 def test_getnoise_invalid_variant(
-    round_id, noise_variants, service_address, checker_url
+    round_id, noise_variants, service_address, checker_url, timeout
 ):
     _test_getnoise(
         round_id,
@@ -585,15 +667,21 @@ def test_getnoise_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
-def test_havoc(round_id, havoc_id, service_address, checker_url):
-    _test_havoc(round_id, havoc_id, service_address, checker_url)
+def test_havoc(round_id, havoc_id, service_address, checker_url, timeout):
+    _test_havoc(round_id, havoc_id, service_address, checker_url, timeout=timeout)
 
 
 def test_havoc_multiplied(
-    round_id, havoc_id_multiplied, havoc_variants, service_address, checker_url
+    round_id,
+    havoc_id_multiplied,
+    havoc_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     _test_havoc(
         round_id,
@@ -601,28 +689,38 @@ def test_havoc_multiplied(
         service_address,
         checker_url,
         unique_variant_index=havoc_id_multiplied,
+        timeout=timeout,
     )
 
 
-def test_havoc_invalid_variant(round_id, havoc_variants, service_address, checker_url):
+def test_havoc_invalid_variant(
+    round_id, havoc_variants, service_address, checker_url, timeout
+):
     _test_havoc(
         round_id,
         havoc_variants,
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
 def _do_exploit_run(
-    encoding, round_id, exploit_id, flag_id, service_address, checker_url
+    encoding,
+    round_id,
+    exploit_id,
+    flag_id,
+    service_address,
+    checker_url,
+    timeout,
 ):
     try:
         flag = generate_dummyflag(encoding)
         flag_hash = hashlib.sha256(flag.encode()).hexdigest()
 
         attack_info = _test_putflag(
-            flag, round_id, flag_id, service_address, checker_url
+            flag, round_id, flag_id, service_address, checker_url, timeout=timeout
         )
         found_flag = _test_exploit(
             _flag_regex_for_encoding(encoding),
@@ -632,6 +730,7 @@ def _do_exploit_run(
             exploit_id,
             service_address,
             checker_url,
+            timeout=timeout,
         )
         print(found_flag)
         return found_flag == flag, None
@@ -640,11 +739,23 @@ def _do_exploit_run(
 
 
 def test_exploit_per_exploit_id(
-    encoding, round_id, exploit_id, flag_variants, service_address, checker_url
+    encoding,
+    round_id,
+    exploit_id,
+    flag_variants,
+    service_address,
+    checker_url,
+    timeout,
 ):
     results = [
         _do_exploit_run(
-            encoding, round_id, exploit_id, flag_id, service_address, checker_url
+            encoding,
+            round_id,
+            exploit_id,
+            flag_id,
+            service_address,
+            checker_url,
+            timeout=timeout,
         )
         for flag_id in range(flag_variants)
     ]
@@ -654,11 +765,23 @@ def test_exploit_per_exploit_id(
 
 
 def test_exploit_per_flag_id(
-    encoding, round_id, exploit_variants, flag_id, service_address, checker_url
+    encoding,
+    round_id,
+    exploit_variants,
+    flag_id,
+    service_address,
+    checker_url,
+    timeout,
 ):
     results = [
         _do_exploit_run(
-            encoding, round_id, exploit_id, flag_id, service_address, checker_url
+            encoding,
+            round_id,
+            exploit_id,
+            flag_id,
+            service_address,
+            checker_url,
+            timeout=timeout,
         )
         for exploit_id in range(exploit_variants)
     ]
@@ -668,7 +791,7 @@ def test_exploit_per_flag_id(
 
 
 def test_exploit_invalid_variant(
-    encoding, round_id, exploit_variants, service_address, checker_url
+    encoding, round_id, exploit_variants, service_address, checker_url, timeout
 ):
     flag = generate_dummyflag(encoding)
     flag_hash = hashlib.sha256(flag.encode()).hexdigest()
@@ -682,15 +805,17 @@ def test_exploit_invalid_variant(
         service_address,
         checker_url,
         expected_result=CheckerTaskResult.INTERNAL_ERROR,
+        timeout=timeout,
     )
 
 
 def test_checker_info_message_case(
     checker_url,
+    timeout,
 ):
     r = requests.get(
         f"{checker_url}/service",
-        timeout=REQUEST_TIMEOUT,
+        timeout=timeout,
     )
     assert r.status_code == 200
     result_message: CheckerInfoMessage = jsons.loads(
