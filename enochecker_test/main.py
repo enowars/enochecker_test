@@ -96,6 +96,7 @@ service's docker container as obtained by e.g:
     parser.add_argument(
         "-t",
         "--timeout",
+        type=int,
         help="The timeout in seconds which the checker has to process the request (defaults to ENOCHECKER_TEST_TIMEOUT or 10s environment variable)",
         default=os.environ.get("ENOCHECKER_TEST_TIMEOUT", default=10),
     )
