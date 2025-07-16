@@ -42,6 +42,16 @@ def checker_url(checker_address, checker_port):
     return f"http://{checker_address}:{checker_port}"
 
 
+posible_encodings = ["ascii", "utf8"]
+
+
+@pytest.fixture(params=posible_encodings)
+def encoding(request):
+    if request.config.getoption("--skip-non-eno-flags") and request.param != "ascii":
+        pytest.skip("skipped by --skip-non-eno-flags")
+    return request.param
+
+
 def pytest_generate_tests(metafunc):
     flag_variants: int = metafunc.config.getoption("--flag-variants")
     noise_variants: int = metafunc.config.getoption("--noise-variants")
@@ -79,9 +89,6 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("exploit_id", range(exploit_variants))
     if "exploit_variants" in metafunc.fixturenames:
         metafunc.parametrize("exploit_variants", [exploit_variants])
-
-    if "encoding" in metafunc.fixturenames:
-        metafunc.parametrize("encoding", ["ascii", "utf8"])
 
 
 def generate_dummyflag(encoding: str) -> str:
