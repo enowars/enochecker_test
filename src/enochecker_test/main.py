@@ -37,6 +37,7 @@ def run_tests(
         f"--checker-address={host}",
         f"--checker-port={port}",
         f"--service-address={service_address}",
+        f"--service-name={info.service_name}",
         f"--flag-variants={info.flag_variants}",
         f"--noise-variants={info.noise_variants}",
         f"--havoc-variants={info.havoc_variants}",
