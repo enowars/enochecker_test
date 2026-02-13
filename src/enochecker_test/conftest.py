@@ -7,6 +7,7 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace import StatusCode, get_current_span
 
 
 def pytest_addoption(parser):
@@ -53,7 +54,7 @@ def setup_telemetry(request):
     # Start a span for the specific test function
     tracer = trace.get_tracer(f"test: {request.config.getoption('--service-name')}")
     with tracer.start_as_current_span(request.node.nodeid.split("::")[1]) as span:
-        request.trace_id = span.get_span_context().span_id
+        request.node.trace_id = format(span.get_span_context().trace_id, "032x")
         yield span
 
 
@@ -73,7 +74,12 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     # Only print the link if the test actually runs and fails
-    if report.when == "call" and report.failed:
+    if report.when == "call":
+        if report.failed:
+            get_current_span().set_status(StatusCode.ERROR)
         trace_id = getattr(item, "trace_id", None)
         if trace_id:
             report.nodeid += f" [OTEL TRACE ID: {trace_id}]"
+            if template := os.environ.get("OTEL_TRACE_URL_TEMPLATE"):
+                url = template.replace("__TRACEID__", trace_id)
+                report.nodeid += f" {url}"
