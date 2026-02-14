@@ -47,6 +47,8 @@ def run_tests(
         f"--seed={seed}",
         "--durations=0",
         "-v",
+        "-o",
+        "asyncio_mode=auto",
     ]
     if stress:
         test_args.append("--stress")
