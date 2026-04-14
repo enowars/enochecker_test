@@ -328,7 +328,7 @@ format = [{ name = "ruff", specifier = ">=0.12.9" }]
 lint = [{ name = "ruff", specifier = ">=0.12.9" }]
 test = [
     { name = "coverage", specifier = ">=7.10.4" },
-    { name = "enochecker3", editable = "../enochecker3" },
+    { name = "enochecker3", specifier = ">=0.14.0" },
     { name = "pytest", specifier = ">=8.2.2" },
     { name = "pytest-asyncio", specifier = ">=0.25.3" },
 ]
@@ -339,8 +339,8 @@ typing = [
 
 [[package]]
 name = "enochecker3"
-version = "0.14.0.dev0"
-source = { editable = "../enochecker3" }
+version = "0.14.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "enochecker-core" },
     { name = "fastapi" },
@@ -355,30 +355,9 @@ dependencies = [
     { name = "pymongo" },
     { name = "uvicorn" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "enochecker-core", specifier = ">=0.13.0,<0.14.0" },
-    { name = "fastapi", specifier = ">=0.128.0,<0.129.0" },
-    { name = "gunicorn", specifier = "==24.1.1" },
-    { name = "httpx", specifier = ">=0.28.0,<0.29.0" },
-    { name = "opentelemetry-api", specifier = ">=1.39.1" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.39.1" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.60b1" },
-    { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.60b1" },
-    { name = "opentelemetry-instrumentation-pymongo", specifier = ">=0.60b1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.39.1" },
-    { name = "pymongo", specifier = ">=4.0.0,<5.0.0" },
-    { name = "uvicorn", specifier = ">=0.40.0,<0.41.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage", specifier = ">=7.10.5" },
-    { name = "mypy", specifier = ">=1.17.1" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-asyncio", specifier = ">=1.1.0" },
-    { name = "ruff", specifier = ">=0.12.10" },
+sdist = { url = "https://files.pythonhosted.org/packages/35/e6/b28f997901409707e37740178b4956bb18da6dc186b119612063e5a6f445/enochecker3-0.14.0.tar.gz", hash = "sha256:d1d8473a03da19509f29c980256f3b2e9acd9a522fcfe3f7e95121aa9b991c29", size = 21232, upload-time = "2026-04-14T16:23:39.967Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/32/40dc701afdd02d0d748adf41fc3a1cc5066996f6c02149c6c98194ca82d7/enochecker3-0.14.0-py3-none-any.whl", hash = "sha256:e9b4fc8641c02fad5332b32cd82874ae63f1a796b1a2bce58e4d636456726432", size = 19567, upload-time = "2026-04-14T16:23:39.114Z" },
 ]
 
 [[package]]

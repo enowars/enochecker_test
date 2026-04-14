@@ -216,9 +216,9 @@ async def _execute_request(
     result_message: CheckerResultMessage = CheckerResultMessage.model_validate_json(
         r.content
     )
-    assert (
-        CheckerTaskResult(result_message.result) == expected_result
-    ), f"\nMessage: {result_message.message}\n"
+    assert CheckerTaskResult(result_message.result) == expected_result, (
+        f"\nMessage: {result_message.message}\n"
+    )
     return result_message
 
 
