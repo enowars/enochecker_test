@@ -5,7 +5,7 @@ requires-python = ">=3.10"
 description = "Library to help test checker scripts based on enochecker"
 authors = [
 	{ name = "Louis Burda", email = "dev@sinitax.com" },
-	{ name = "Lucas Drushke", email = "ldrushk@posteo.de" }
+	{ name = "Lucas Druschke", email = "ldruschk@posteo.de" }
 ]
 license = "MIT"
 readme = "README.md"
