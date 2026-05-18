@@ -114,7 +114,9 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("test_id", range(test_variants))
 
     if "encoding" in metafunc.fixturenames:
-        metafunc.parametrize("encoding", ["ascii", "utf8"])
+        skip_utf8 = metafunc.config.getoption("--no-utf8-flags")
+        encodings = ["ascii"] if skip_utf8 else ["ascii", "utf8"]
+        metafunc.parametrize("encoding", encodings)
 
     if "stress_multiplier" in metafunc.fixturenames:
         metafunc.parametrize("stress_multiplier", [32, 128, 512])

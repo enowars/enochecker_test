@@ -16,6 +16,7 @@ def run_tests(
     multiplier: int,
     seed: int,
     stress: bool,
+    no_utf8_flags: bool = False,
 ):
     transport = httpx.HTTPTransport(retries=10)
     with httpx.Client(transport=transport) as client:
@@ -52,6 +53,8 @@ def run_tests(
     ]
     if stress:
         test_args.append("--stress")
+    if no_utf8_flags:
+        test_args.append("--no-utf8-flags")
 
     if test_expr:
         test_args.append("-k")
@@ -130,6 +133,11 @@ service's docker container as obtained by e.g:
         action="store_true",
     )
     parser.add_argument(
+        "--no-utf8-flags",
+        help="Skip all tests that use non-ASCII (UTF-8) flags",
+        action="store_true",
+    )
+    parser.add_argument(
         "testexpr",
         help="Specify the tests that should be run in the syntax expected by pytests -k flag, e.g. 'test_getflag' or 'not exploit'. If no expr is specified, all tests will be run.",
         nargs="?",
@@ -170,4 +178,5 @@ service's docker container as obtained by e.g:
         args.multiplier,
         args.seed,
         args.stress,
+        args.no_utf8_flags,
     )
