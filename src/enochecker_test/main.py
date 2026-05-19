@@ -136,6 +136,7 @@ service's docker container as obtained by e.g:
         "--no-utf8-flags",
         help="Skip all tests that use non-ASCII (UTF-8) flags",
         action="store_true",
+        default=os.environ.get("ENOCHECKER_NO_UTF8_FLAGS", "").lower() in ("1", "true", "yes", "on")
     )
     parser.add_argument(
         "testexpr",
