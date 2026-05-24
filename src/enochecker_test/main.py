@@ -16,7 +16,7 @@ def run_tests(
     multiplier: int,
     seed: int,
     stress: bool,
-    no_utf8_flags: bool = False,
+    flag_types: str = "ascii,utf8",
 ):
     transport = httpx.HTTPTransport(retries=10)
     with httpx.Client(transport=transport) as client:
@@ -53,8 +53,7 @@ def run_tests(
     ]
     if stress:
         test_args.append("--stress")
-    if no_utf8_flags:
-        test_args.append("--no-utf8-flags")
+    test_args.append(f"--flag-types={flag_types}")
 
     if test_expr:
         test_args.append("-k")
@@ -133,10 +132,9 @@ service's docker container as obtained by e.g:
         action="store_true",
     )
     parser.add_argument(
-        "--no-utf8-flags",
-        help="Skip all tests that use non-ASCII (UTF-8) flags",
-        action="store_true",
-        default=os.environ.get("ENOCHECKER_NO_UTF8_FLAGS", "").lower() in ("1", "true", "yes", "on")
+        "--flag-types",
+        help="Comma-separated list of flag encodings to test (default: ascii,utf8)",
+        default=os.environ.get("ENOCHECKER_FLAG_TYPES", "ascii,utf8"),
     )
     parser.add_argument(
         "testexpr",
@@ -179,5 +177,5 @@ service's docker container as obtained by e.g:
         args.multiplier,
         args.seed,
         args.stress,
-        args.no_utf8_flags,
+        args.flag_types,
     )
